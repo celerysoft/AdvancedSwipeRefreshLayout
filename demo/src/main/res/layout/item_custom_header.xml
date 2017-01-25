@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="horizontal"
+              android:gravity="center"
+              android:background="#999999"
+              android:layout_width="match_parent"
+              android:layout_height="56dp">
+
+    <ImageView
+        android:id="@+id/iv_arrow"
+        android:layout_width="0dp"
+        android:layout_height="24dp"
+        android:layout_weight="4"
+        android:scaleType="fitEnd"
+        android:src="@drawable/ic_arrow_downward_white_24dp"
+        android:contentDescription="@null"/>
+
+    <TextView
+        android:id="@+id/tv"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_weight="6"
+        android:layout_marginLeft="16dp"
+        android:layout_marginStart="16dp"
+        android:gravity="center|start"
+        android:textColor="@android:color/white"
+        android:text="Pull Down"/>
+
+</LinearLayout>
