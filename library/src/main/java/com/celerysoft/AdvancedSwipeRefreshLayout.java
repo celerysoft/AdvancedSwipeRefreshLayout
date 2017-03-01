@@ -1315,19 +1315,6 @@ public class AdvancedSwipeRefreshLayout extends ViewGroup implements NestedScrol
     @Override
     public boolean onNestedFling(View target, float velocityX, float velocityY,
                                  boolean consumed) {
-
-        if (mTarget != null) {
-            mTarget.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (!canChildScrollDown()) {
-                        finishFooterSpinner(mFooterViewContainerHeight);
-                    }
-                }
-            }, 1000);
-        }
-
-
         return dispatchNestedFling(velocityX, velocityY, consumed);
     }
 
