@@ -18,6 +18,8 @@
         </activity>
         <activity android:name=".RecyclerViewActivity"/>
         <activity android:name=".RecyclerViewActivity2"/>
+        <activity android:name=".ListViewActivity"/>
+        <activity android:name=".ListViewActivity2"/>
     </application>
 
 </manifest>

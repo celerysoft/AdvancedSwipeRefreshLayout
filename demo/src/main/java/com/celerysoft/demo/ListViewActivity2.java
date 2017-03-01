@@ -4,28 +4,26 @@ import android.animation.ValueAnimator;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.DividerItemDecoration;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.celerysoft.AdvancedSwipeRefreshLayout;
 
 /**
- * Created by Celery on 2017/1/25.
+ * Created by Celery on 2017/2/28.
  *
  */
 
-public class RecyclerViewActivity2 extends AppCompatActivity {
+public class ListViewActivity2 extends AppCompatActivity {
     private AdvancedSwipeRefreshLayout mSwipeRefreshLayout;
-    private RecyclerView mRecyclerView;
-    private SimpleRecyclerViewAdapter mAdapter;
+    private ListView mListView;
+    private SimpleListViewAdapter mAdapter;
 
     private TextView mHeaderTv;
     private ImageView mHeaderArrow;
@@ -35,7 +33,7 @@ public class RecyclerViewActivity2 extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_recycler_view);
+        setContentView(R.layout.activity_list_view);
 
         initActivity();
     }
@@ -49,7 +47,7 @@ public class RecyclerViewActivity2 extends AppCompatActivity {
 
     private void bindView() {
         mSwipeRefreshLayout = (AdvancedSwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
-        mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        mListView = (ListView) findViewById(R.id.list_view);
     }
 
     private void bindListener() {
@@ -133,10 +131,10 @@ public class RecyclerViewActivity2 extends AppCompatActivity {
 
     private void initData() {
         mPage = 0;
-        mAdapter = new SimpleRecyclerViewAdapter(this);
-        mAdapter.setData(FakeBackend.getStringData(mPage));
+        mAdapter = new SimpleListViewAdapter(this);
+        mAdapter.setData(FakeBackend.getStringData(mPage, 20));
         mPage++;
-        mRecyclerView.setAdapter(mAdapter);
+        mListView.setAdapter(mAdapter);
     }
 
     private void initView() {
@@ -144,7 +142,7 @@ public class RecyclerViewActivity2 extends AppCompatActivity {
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
-            actionBar.setTitle("RecyclerView");
+            actionBar.setTitle("ListView");
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
@@ -160,9 +158,6 @@ public class RecyclerViewActivity2 extends AppCompatActivity {
         ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(getResources().getDisplayMetrics().widthPixels, getResources().getDisplayMetrics().widthPixels / 2);
         mSwipeRefreshLayout.setHeaderView(view, layoutParams);
         mSwipeRefreshLayout.setHeaderScrollTogether(true);
-
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
-        mRecyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
     }
 
     @Override

@@ -1,10 +1,13 @@
 package com.celerysoft.demo;
 
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
+import android.view.MenuItem;
 
 import com.celerysoft.AdvancedSwipeRefreshLayout;
 
@@ -16,7 +19,7 @@ import com.celerysoft.AdvancedSwipeRefreshLayout;
 public class RecyclerViewActivity extends AppCompatActivity {
     private AdvancedSwipeRefreshLayout mSwipeRefreshLayout;
     private RecyclerView mRecyclerView;
-    private SimpleAdapter mAdapter;
+    private SimpleRecyclerViewAdapter mAdapter;
 
     private int mPage = 0;
 
@@ -93,13 +96,22 @@ public class RecyclerViewActivity extends AppCompatActivity {
 
     private void initData() {
         mPage = 0;
-        mAdapter = new SimpleAdapter(this);
+        mAdapter = new SimpleRecyclerViewAdapter(this);
         mAdapter.setData(FakeBackend.getStringData(mPage));
         mPage++;
         mRecyclerView.setAdapter(mAdapter);
     }
 
     private void initView() {
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setTitle("RecyclerView");
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
+
+
         mSwipeRefreshLayout.setColorSchemeColors(
                 getResources().getColor(R.color.colorAccent),
                 getResources().getColor(R.color.colorPrimary),
@@ -108,5 +120,16 @@ public class RecyclerViewActivity extends AppCompatActivity {
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         mRecyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == android.R.id.home) {
+            this.finish();
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 }

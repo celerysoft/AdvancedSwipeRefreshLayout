@@ -15,11 +15,11 @@ import java.util.List;
  *
  */
 
-public class SimpleAdapter extends RecyclerView.Adapter<SimpleAdapter.ViewHolder> {
+public class SimpleRecyclerViewAdapter extends RecyclerView.Adapter<SimpleRecyclerViewAdapter.ViewHolder> {
     private Context mContext;
     private List<String> mData;
 
-    public SimpleAdapter(Context context) {
+    public SimpleRecyclerViewAdapter(Context context) {
         mContext = context;
     }
 
@@ -37,13 +37,13 @@ public class SimpleAdapter extends RecyclerView.Adapter<SimpleAdapter.ViewHolder
     }
 
     @Override
-    public SimpleAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public SimpleRecyclerViewAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(mContext).inflate(R.layout.item_simple_recycler_view, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(SimpleAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(SimpleRecyclerViewAdapter.ViewHolder holder, int position) {
         try {
             holder.tv.setText(mData.get(position));
         } catch (Exception e) {

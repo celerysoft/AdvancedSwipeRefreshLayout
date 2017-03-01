@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.celerysoft;
+package android.support.v4.widget;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -72,7 +72,7 @@ class MaterialProgressDrawable extends Drawable implements Animatable {
     private static final float STROKE_WIDTH_LARGE = 3f;
 
     private static final int[] COLORS = new int[] {
-            Color.BLACK
+        Color.BLACK
     };
 
     /**
@@ -127,7 +127,7 @@ class MaterialProgressDrawable extends Drawable implements Animatable {
     }
 
     private void setSizeParameters(double progressCircleWidth, double progressCircleHeight,
-                                   double centerRadius, double strokeWidth, float arrowWidth, float arrowHeight) {
+            double centerRadius, double strokeWidth, float arrowWidth, float arrowHeight) {
         final Ring ring = mRing;
         final DisplayMetrics metrics = mResources.getDisplayMetrics();
         final float screenDensity = metrics.density;
@@ -145,8 +145,8 @@ class MaterialProgressDrawable extends Drawable implements Animatable {
      * Set the overall size for the progress spinner. This updates the radius
      * and stroke width of the ring.
      *
-     * @param size One of {@link #LARGE} or
-     *            {@link #DEFAULT}
+     * @param size One of {@link MaterialProgressDrawable.LARGE} or
+     *            {@link MaterialProgressDrawable.DEFAULT}
      */
     public void updateSizes(@ProgressDrawableSize int size) {
         if (size == LARGE) {
@@ -329,18 +329,18 @@ class MaterialProgressDrawable extends Drawable implements Animatable {
      * The new ring color will be a translation from the starting ring color to
      * the next color.
      */
-    void updateRingColor(float interpolatedTime, MaterialProgressDrawable.Ring ring) {
+    void updateRingColor(float interpolatedTime, Ring ring) {
         if (interpolatedTime > COLOR_START_DELAY_OFFSET) {
             // scale the interpolatedTime so that the full
             // transformation from 0 - 1 takes place in the
             // remaining time
             ring.setColor(evaluateColorChange((interpolatedTime - COLOR_START_DELAY_OFFSET)
-                            / (1.0f - COLOR_START_DELAY_OFFSET), ring.getStartingColor(),
+                    / (1.0f - COLOR_START_DELAY_OFFSET), ring.getStartingColor(),
                     ring.getNextColor()));
         }
     }
 
-    void applyFinishTranslation(float interpolatedTime, MaterialProgressDrawable.Ring ring) {
+    void applyFinishTranslation(float interpolatedTime, Ring ring) {
         // shrink back down and complete a full rotation before
         // starting other circles
         // Rotation goes between [0..1].
@@ -361,7 +361,7 @@ class MaterialProgressDrawable extends Drawable implements Animatable {
     private void setupAnimators() {
         final Ring ring = mRing;
         final Animation animation = new Animation() {
-            @Override
+                @Override
             public void applyTransformation(float interpolatedTime, Transformation t) {
                 if (mFinishing) {
                     applyFinishTranslation(interpolatedTime, ring);
@@ -385,7 +385,7 @@ class MaterialProgressDrawable extends Drawable implements Animatable {
                                 / (1.0f - START_TRIM_DURATION_OFFSET);
                         final float startTrim = startingTrim
                                 + ((MAX_PROGRESS_ARC - minProgressArc) * MATERIAL_INTERPOLATOR
-                                .getInterpolation(scaledTime));
+                                        .getInterpolation(scaledTime));
                         ring.setStartTrim(startTrim);
                     }
 
@@ -417,17 +417,17 @@ class MaterialProgressDrawable extends Drawable implements Animatable {
         animation.setInterpolator(LINEAR_INTERPOLATOR);
         animation.setAnimationListener(new Animation.AnimationListener() {
 
-            @Override
+                @Override
             public void onAnimationStart(Animation animation) {
                 mRotationCount = 0;
             }
 
-            @Override
+                @Override
             public void onAnimationEnd(Animation animation) {
                 // do nothing
             }
 
-            @Override
+                @Override
             public void onAnimationRepeat(Animation animation) {
                 ring.storeOriginals();
                 ring.goToNextColor();
@@ -502,7 +502,7 @@ class MaterialProgressDrawable extends Drawable implements Animatable {
             mPaint.setAntiAlias(true);
             mPaint.setStyle(Style.STROKE);
 
-            mArrowPaint.setStyle(Style.FILL);
+            mArrowPaint.setStyle(Paint.Style.FILL);
             mArrowPaint.setAntiAlias(true);
         }
 
@@ -549,8 +549,8 @@ class MaterialProgressDrawable extends Drawable implements Animatable {
         private void drawTriangle(Canvas c, float startAngle, float sweepAngle, Rect bounds) {
             if (mShowArrow) {
                 if (mArrow == null) {
-                    mArrow = new Path();
-                    mArrow.setFillType(Path.FillType.EVEN_ODD);
+                    mArrow = new android.graphics.Path();
+                    mArrow.setFillType(android.graphics.Path.FillType.EVEN_ODD);
                 } else {
                     mArrow.reset();
                 }
@@ -586,7 +586,7 @@ class MaterialProgressDrawable extends Drawable implements Animatable {
          */
         public void setColors(@NonNull int[] colors) {
             mColors = colors;
-            // if colors are resetHeader, make sure to resetHeader the color index as well
+            // if colors are reset, make sure to reset the color index as well
             setColorIndex(0);
         }
 

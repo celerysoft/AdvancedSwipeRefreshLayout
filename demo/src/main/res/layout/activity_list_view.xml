@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/activity_recycler_view"
+    android:id="@+id/activity_list_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.celerysoft.demo.RecyclerViewActivity"
+    tools:context="com.celerysoft.demo.ListViewActivity"
     android:orientation="vertical">
 
     <android.support.design.widget.AppBarLayout
@@ -32,11 +32,13 @@
         android:paddingRight="@dimen/activity_horizontal_margin"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/recycler_view"
+        <ListView
+            android:id="@+id/list_view"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:dividerHeight="1dp"
+            android:scrollbars="none"/>
 
     </com.celerysoft.AdvancedSwipeRefreshLayout>
 
-</android.support.design.widget.CoordinatorLayout>
+</LinearLayout>
