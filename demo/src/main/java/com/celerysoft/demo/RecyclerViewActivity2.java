@@ -157,9 +157,10 @@ public class RecyclerViewActivity2 extends AppCompatActivity {
         View view = LayoutInflater.from(this).inflate(R.layout.item_custom_header, mSwipeRefreshLayout, false);
         mHeaderTv = (TextView) view.findViewById(R.id.tv);
         mHeaderArrow = (ImageView) view.findViewById(R.id.iv_arrow);
-        ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(getResources().getDisplayMetrics().widthPixels, getResources().getDisplayMetrics().widthPixels / 2);
+        ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(getResources().getDisplayMetrics().widthPixels, (int) (getResources().getDisplayMetrics().density * 56));
         mSwipeRefreshLayout.setHeaderView(view, layoutParams);
         mSwipeRefreshLayout.setHeaderScrollTogether(true);
+        mSwipeRefreshLayout.setMaxPullAbleDistance(2 * (int) (getResources().getDisplayMetrics().density * 56));
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         mRecyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));

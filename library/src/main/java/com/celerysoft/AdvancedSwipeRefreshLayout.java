@@ -53,10 +53,14 @@ import android.widget.RelativeLayout;
  * </p>
  * <p>
  * <b>What's new about AdvancedSwipeRefreshLayout?</b>
+ * <p>1. {@link #setOnPullToRefreshListener(OnPullToRefreshListener)}</p>
+ * <p>2. {@link #setHeaderView(View, LayoutParams)}</p>
+ * <p>3. {@link #setOnPushToLoadMoreListener(OnPushToLoadMoreListener)}</p>
  * </p>
  */
 public class AdvancedSwipeRefreshLayout extends ViewGroup implements NestedScrollingParent, NestedScrollingChild {
     private static final String LOG_TAG = AdvancedSwipeRefreshLayout.class.getSimpleName();
+    private static final String TAG = LOG_TAG;
     // Maps to ProgressBar.Large style
     public static final int LARGE = MaterialProgressDrawable.LARGE;
     // Maps to ProgressBar default style
@@ -168,8 +172,9 @@ public class AdvancedSwipeRefreshLayout extends ViewGroup implements NestedScrol
     private RelativeLayout mFooterViewContainer;
     private int mFooterViewContainerIndex = -1;
     private ProgressBar mFooterProgressBar;
+
     /**
-     * 上拉加载更多时，上拉的距离px
+     * Represent the push distance on push-to-load-more action.
      **/
     private int mPushDistance = 0;
 
@@ -182,8 +187,12 @@ public class AdvancedSwipeRefreshLayout extends ViewGroup implements NestedScrol
 
     float mStartingScale;
 
+    /** The max distance of pulling down **/
+    private int mMaxPullAbleDistance = -1;
+
     /**
      * always equal with the height of {@link #mHeaderViewContainer}
+     * negative number
      **/
     protected int mOriginalOffsetTop;
 
@@ -192,12 +201,13 @@ public class AdvancedSwipeRefreshLayout extends ViewGroup implements NestedScrol
      **/
     private float mTotalDragDistance = -1;
     /**
-     * {@link #mHeaderViewContainer} 当前距离顶部的偏移量px
+     * the distance between {@link #mHeaderViewContainer} and the top of AdvancedSwipeRefreshLayout in px.
      **/
     private int mCurrentTargetOffsetTop;
+    /** Indicate if {@link #mOriginalOffsetTop} has been calculated **/
     private boolean mOriginalOffsetCalculated = false;
     /**
-     * 最后停顿时的偏移量px
+     * the offset in px of header view container bottom while refreshing.
      **/
     int mSpinnerOffsetEnd;
 
@@ -221,6 +231,7 @@ public class AdvancedSwipeRefreshLayout extends ViewGroup implements NestedScrol
     boolean mUsingCustomStart;
 
     private OnChildScrollUpCallback mChildScrollUpCallback;
+    private OnChildScrollDownCallback mChildScrollDownCallback;
 
     /**
      * 下拉时，超过距离之后，弹回来的动画监听器
@@ -801,10 +812,30 @@ public class AdvancedSwipeRefreshLayout extends ViewGroup implements NestedScrol
     /**
      * Set the distance to trigger a sync in dips
      *
+     * @return distance
+     */
+    public float getTotalDragDistance() {
+        return mTotalDragDistance;
+    }
+
+    /**
+     * Set the distance to trigger a sync in dips
+     *
      * @param distance distance
      */
     public void setDistanceToTriggerSync(int distance) {
         mTotalDragDistance = distance;
+    }
+
+    /**
+     * Set the max distance of pulling down, it must be more than {@link #getTotalDragDistance()}
+     *
+     * @param maxPullAbleDistance
+     */
+    public void setMaxPullAbleDistance(int maxPullAbleDistance) {
+        if (maxPullAbleDistance >= mTotalDragDistance) {
+            mMaxPullAbleDistance = maxPullAbleDistance;
+        }
     }
 
     @Override
@@ -877,6 +908,9 @@ public class AdvancedSwipeRefreshLayout extends ViewGroup implements NestedScrol
 
         if (mTotalDragDistance == -1) {
             mTotalDragDistance = mHeaderViewContainerHeight;
+            if (mMaxPullAbleDistance < mTotalDragDistance) {
+                mMaxPullAbleDistance = -1;
+            }
         }
         if (mSpinnerOffsetEnd == -1) {
             mSpinnerOffsetEnd = mHeaderViewContainerHeight;
@@ -908,7 +942,7 @@ public class AdvancedSwipeRefreshLayout extends ViewGroup implements NestedScrol
     }
 
     private void notifyPullDistanceChanged() {
-        int distance = mCurrentTargetOffsetTop + mHeaderViewContainer.getHeight();
+        int distance = mCurrentTargetOffsetTop - mOriginalOffsetTop;
         if (mOnPullToRefreshListener != null) {
             mOnPullToRefreshListener.onPullDistance(distance, (int) mTotalDragDistance);
         }
@@ -955,9 +989,9 @@ public class AdvancedSwipeRefreshLayout extends ViewGroup implements NestedScrol
      * scroll down. Override this if the child view is a custom view.
      */
     public boolean canChildScrollDown() {
-//        if (mChildScrollUpCallback != null) {
-//            return mChildScrollUpCallback.canChildScrollUp(this, mTarget);
-//        }
+        if (mChildScrollDownCallback != null) {
+            return mChildScrollDownCallback.canChildScrollDown(this, mTarget);
+        }
         if (android.os.Build.VERSION.SDK_INT < 14) {
             if (mTarget instanceof AbsListView) {
                 final AbsListView absListView = (AbsListView) mTarget;
@@ -1031,6 +1065,16 @@ public class AdvancedSwipeRefreshLayout extends ViewGroup implements NestedScrol
      */
     public void setOnChildScrollUpCallback(@Nullable OnChildScrollUpCallback callback) {
         mChildScrollUpCallback = callback;
+    }
+
+    /**
+     * Set a callback to override {@link #canChildScrollDown()} method. Non-null
+     * callback will return the value provided by the callback and ignore all internal logic.
+     *
+     * @param callback Callback that should be called when canChildScrollDown() is called.
+     */
+    public void setChildScrollDownCallback(OnChildScrollDownCallback callback) {
+        mChildScrollDownCallback = callback;
     }
 
     @Override
@@ -1173,8 +1217,6 @@ public class AdvancedSwipeRefreshLayout extends ViewGroup implements NestedScrol
 
     @Override
     public void onNestedPreScroll(View target, int dx, int dy, int[] consumed) {
-        Log.w(LOG_TAG, "onNestedPreScroll, dy = " + dy);
-
         // Handle header nested pre-scroll
         handleHeaderNestedPreScroll(target, dx, dy, consumed);
 
@@ -1225,8 +1267,6 @@ public class AdvancedSwipeRefreshLayout extends ViewGroup implements NestedScrol
         // Dispatch up to the nested parent first
         dispatchNestedScroll(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, mParentOffsetInWindow);
         final int dy = dyUnconsumed + mParentOffsetInWindow[1];
-        Log.w(LOG_TAG, "onNestedScroll, dyUnconsumed = " + dyUnconsumed);
-        Log.w(LOG_TAG, "onNestedScroll, dy = " + dy);
 
         // Handle header nested scroll
         handleHeaderNestedScroll(target, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed);
@@ -1334,20 +1374,24 @@ public class AdvancedSwipeRefreshLayout extends ViewGroup implements NestedScrol
 
     private void moveSpinner(float overScrollTop) {
         mProgress.showArrow(true);
-        float originalDragPercent = overScrollTop / mTotalDragDistance;
 
+        float originalDragPercent = overScrollTop / mTotalDragDistance;
         float dragPercent = Math.min(1f, Math.abs(originalDragPercent));
         float adjustedPercent = (float) Math.max(dragPercent - .4, 0) * 5 / 3;
         float extraOS = Math.abs(overScrollTop) - mTotalDragDistance;
         float slingshotDist = mUsingCustomStart ? mSpinnerOffsetEnd - mOriginalOffsetTop
                 : mSpinnerOffsetEnd;
+        // make sure the pulling distance is no more than mMaxPullAbleDistance
+        if (mMaxPullAbleDistance != -1) {
+            slingshotDist = mMaxPullAbleDistance / 2;
+        }
         float tensionSlingshotPercent = Math.max(0, Math.min(extraOS, slingshotDist * 2)
                 / slingshotDist);
         float tensionPercent = (float) ((tensionSlingshotPercent / 4) - Math.pow(
                 (tensionSlingshotPercent / 4), 2)) * 2f;
         float extraMove = (slingshotDist) * tensionPercent * 2;
-
         int targetY = mOriginalOffsetTop + (int) ((slingshotDist * dragPercent) + extraMove);
+
         // where 1.0f is a full circle
         if (mHeaderViewContainer.getVisibility() != View.VISIBLE) {
             mHeaderViewContainer.setVisibility(View.VISIBLE);
@@ -1379,10 +1423,8 @@ public class AdvancedSwipeRefreshLayout extends ViewGroup implements NestedScrol
         float rotation = (-0.25f + .4f * adjustedPercent + tensionPercent * 2) * .5f;
         mProgress.setProgressRotation(rotation);
 
-        if (overScrollTop < mTotalDragDistance) {
-            if (mScale) {
-                setAnimationProgress(overScrollTop / mTotalDragDistance);
-            }
+        int distance = targetY - mOriginalOffsetTop;
+        if (distance < mTotalDragDistance) {
             if (mOnPullToRefreshListener != null) {
                 mOnPullToRefreshListener.onPullEnable(false);
             }
@@ -1429,7 +1471,6 @@ public class AdvancedSwipeRefreshLayout extends ViewGroup implements NestedScrol
     }
 
     private void moveFooterSpinner(float overScrollBottom) {
-        Log.w(LOG_TAG, "moveFooterSpinner, overScrollBottom = " + overScrollBottom);
         overScrollBottom = overScrollBottom > mFooterViewContainerHeight ? mFooterViewContainerHeight : overScrollBottom;
         mPushDistance = (int) overScrollBottom;
 
@@ -1579,144 +1620,6 @@ public class AdvancedSwipeRefreshLayout extends ViewGroup implements NestedScrol
 
         return true;
     }
-
-//    private boolean onPullTouchEvent(MotionEvent ev, int action) {
-//        final int pointerIndex;
-//        switch (action) {
-//            case MotionEvent.ACTION_DOWN:
-//                mActivePointerId = ev.getPointerId(0);
-//                mIsBeingDragged = false;
-//                break;
-//
-//            case MotionEvent.ACTION_MOVE: {
-//                pointerIndex = ev.findPointerIndex(mActivePointerId);
-//                if (pointerIndex < 0) {
-//                    Log.e(LOG_TAG, "Got ACTION_MOVE event but have an invalid active pointer id.");
-//                    return false;
-//                }
-//
-//                final float y = ev.getY(pointerIndex);
-//                if (mIsBeingDragged) {
-//                    final float overScrollTop = (y - mInitialMotionY) * mHeaderDragRate;
-//                    if (overScrollTop > 0) {
-//                        moveSpinner(overScrollTop);
-//                    } else {
-//                        return false;
-//                    }
-//                }
-//                break;
-//            }
-//            case MotionEventCompat.ACTION_POINTER_DOWN: {
-//                final int index = ev.getActionIndex();
-//                mActivePointerId = ev.getPointerId(index);
-//                break;
-//            }
-//
-//            case MotionEventCompat.ACTION_POINTER_UP: {
-//                onSecondaryPointerUp(ev);
-//                break;
-//            }
-//
-//            case MotionEvent.ACTION_UP: {
-//                pointerIndex = ev.findPointerIndex(mActivePointerId);
-//                if (pointerIndex < 0) {
-//                    Log.e(LOG_TAG, "Got ACTION_UP event but don't have an active pointer id.");
-//                    return false;
-//                }
-//
-//                if (mIsBeingDragged) {
-//                    final float y = ev.getY(pointerIndex);
-//                    final float overScrollTop = (y - mInitialMotionY) * mHeaderDragRate;
-//                    mIsBeingDragged = false;
-//                    finishSpinner(overScrollTop);
-//                }
-//                mActivePointerId = INVALID_POINTER;
-//                return false;
-//            }
-//
-//            case MotionEvent.ACTION_CANCEL:
-//                return false;
-//        }
-//
-//        return true;
-//    }
-//
-//    /**
-//     * 处理上拉加载更多的Touch事件
-//     *
-//     * @param ev
-//     * @param action
-//     * @return
-//     */
-//    private boolean onPushTouchEvent(MotionEvent ev, int action) {
-//        switch (action) {
-//            case MotionEvent.ACTION_DOWN:
-//                mActivePointerId = ev.getPointerId(0);
-//                mIsBeingDragged = false;
-//                break;
-//            case MotionEvent.ACTION_MOVE: {
-//                final int pointerIndex = ev.findPointerIndex(mActivePointerId);
-//                if (pointerIndex < 0) {
-//                    Log.e(LOG_TAG, "Got ACTION_MOVE event but have an invalid active pointer id.");
-//                    return false;
-//                }
-//                final float y = ev.getY();
-//                float overScrollBottom = (mInitialMotionY - y) * mFooterDragRate;
-//                overScrollBottom = overScrollBottom > mFooterViewContainerHeight ? mFooterViewContainerHeight : overScrollBottom;
-//                if (mIsBeingDragged) {
-//                    mPushDistance = (int) overScrollBottom;
-//                    setFooterOffsetTopAndBottom();
-//                    if (mOnPushToLoadMoreListener != null) {
-//                        mOnPushToLoadMoreListener.onPushEnable(mPushDistance >= mFooterViewContainerHeight);
-//                    }
-//                }
-//                break;
-//            }
-//            case MotionEventCompat.ACTION_POINTER_DOWN: {
-//                final int index = MotionEventCompat.getActionIndex(ev);
-//                mActivePointerId = ev.getPointerId(index);
-//                break;
-//            }
-//
-//            case MotionEventCompat.ACTION_POINTER_UP:
-//                onSecondaryPointerUp(ev);
-//                break;
-//
-//            case MotionEvent.ACTION_UP: {
-//                if (mActivePointerId == INVALID_POINTER) {
-//                    Log.e(LOG_TAG, "Got ACTION_UP event but don't have an active pointer id.");
-//                    return false;
-//                }
-//                final float y = ev.getY();
-//                float overScrollBottom = (mInitialMotionY - y) * DRAG_RATE;
-//                overScrollBottom = overScrollBottom > mFooterViewContainerHeight ? mFooterViewContainerHeight : overScrollBottom;
-//                mIsBeingDragged = false;
-//                mActivePointerId = INVALID_POINTER;
-//                if (overScrollBottom < mFooterViewContainerHeight || mOnPushToLoadMoreListener == null) {// 直接取消
-//                    mPushDistance = 0;
-//                } else {// 下拉到mFooterViewHeight
-//                    mPushDistance = mFooterViewContainerHeight;
-//                }
-//                if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.HONEYCOMB) {
-//                    setFooterOffsetTopAndBottom();
-//                    if (mPushDistance == mFooterViewContainerHeight) {
-//                        mLoadingMore = true;
-//
-//                        if (mOnPushToLoadMoreListener != null) {
-//                            mOnPushToLoadMoreListener.onLoadMore();
-//                        }
-//                    }
-//                } else {
-//                    animatorFooterToCorrectPosition();
-//                }
-//
-//                return false;
-//            }
-//            case MotionEvent.ACTION_CANCEL:
-//                return false;
-//        }
-//        return true;
-//    }
 
 
     /**
@@ -2042,19 +1945,5 @@ public class AdvancedSwipeRefreshLayout extends ViewGroup implements NestedScrol
          * @return Whether it is possible for the child view of parent layout to scroll up.
          */
         boolean canChildScrollDown(AdvancedSwipeRefreshLayout parent, @Nullable View child);
-    }
-
-    private boolean mListenTargetFlingThreadRunning;
-    private Thread mListenTargetFlingThread;
-    private void startListenTargetFling() {
-        mListenTargetFlingThreadRunning = true;
-
-        if (mListenTargetFlingThread != null && mListenTargetFlingThread.isAlive()) {
-
-        }
-    }
-
-    private void stopListenTargetFling() {
-        mListenTargetFlingThreadRunning = false;
     }
 }
